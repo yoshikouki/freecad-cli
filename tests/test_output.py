@@ -1,5 +1,6 @@
 import json
 
+import click
 from click.testing import CliRunner
 
 from freecad_cli.output import success
@@ -11,9 +12,6 @@ def test_success_outputs_json():
         result = runner.invoke(_success_command, ["hello"])
         output = json.loads(result.output)
         assert output == {"status": "ok", "data": "hello"}
-
-
-import click
 
 
 @click.command()
