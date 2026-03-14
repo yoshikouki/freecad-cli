@@ -9,8 +9,36 @@ import click
 from freecad_cli.client import FreeCADClient
 from freecad_cli.output import error, success
 
+COMMAND_SECTIONS = {
+    "Core": ["execute-code", "ping", "screenshot"],
+    "Documents": ["active-document", "create-document", "list-documents", "set-active-document"],
+    "Objects": ["create-object", "edit-object", "delete-object", "get-object", "get-objects"],
+    "Parts Library": ["list-parts", "insert-part"],
+    "Setup": ["install-addon"],
+}
 
-@click.group()
+
+class SectionedGroup(click.Group):
+    def format_commands(self, ctx, formatter):
+        commands = {}
+        for name in self.list_commands(ctx):
+            cmd = self.get_command(ctx, name)
+            if cmd is not None:
+                commands[name] = cmd
+
+        for section, names in COMMAND_SECTIONS.items():
+            rows = []
+            for name in names:
+                if name in commands:
+                    cmd = commands[name]
+                    help_text = cmd.get_short_help_str(limit=formatter.width)
+                    rows.append((name, help_text))
+            if rows:
+                with formatter.section(section):
+                    formatter.write_dl(rows)
+
+
+@click.group(cls=SectionedGroup)
 @click.option("--host", default="localhost", help="FreeCAD RPC server host")
 @click.option("--port", default=9875, type=int, help="FreeCAD RPC server port")
 @click.option("--timeout", default=5.0, type=float, help="RPC timeout in seconds")
