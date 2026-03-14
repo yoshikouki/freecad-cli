@@ -173,6 +173,52 @@ print(json.dumps(parts))
 """)
         return json.loads(result["output"])
 
+    def export_object(self, format: str, output_path: str, object_name: str | None = None):
+        """Export an object or document to the specified format."""
+        if format == "stl":
+            export_code = f"""
+import Mesh, FreeCAD, os
+doc = FreeCAD.ActiveDocument
+obj_name = {object_name!r}
+if obj_name:
+    obj = doc.getObject(obj_name)
+else:
+    obj = doc.getObject('Body') or doc.Objects[0]
+output = {output_path!r}
+os.makedirs(os.path.dirname(os.path.abspath(output)), exist_ok=True)
+Mesh.export([obj], output)
+print(output)
+"""
+        elif format == "step":
+            export_code = f"""
+import Part, FreeCAD, os
+doc = FreeCAD.ActiveDocument
+obj_name = {object_name!r}
+if obj_name:
+    obj = doc.getObject(obj_name)
+else:
+    obj = doc.getObject('Body') or doc.Objects[0]
+output = {output_path!r}
+os.makedirs(os.path.dirname(os.path.abspath(output)), exist_ok=True)
+Part.export([obj], output)
+print(output)
+"""
+        elif format == "fcstd":
+            export_code = f"""
+import FreeCAD, os
+doc = FreeCAD.ActiveDocument
+output = {output_path!r}
+os.makedirs(os.path.dirname(os.path.abspath(output)), exist_ok=True)
+doc.saveAs(output)
+print(output)
+"""
+        else:
+            from freecad_cli.output import error
+            error(f"Unsupported format: {format}. Use stl, step, or fcstd", "invalid_input")
+
+        result = self._execute(export_code)
+        return result["output"].strip()
+
     def insert_part_from_library(self, path: str):
         result = self._execute(f"""
 import Part, FreeCAD
