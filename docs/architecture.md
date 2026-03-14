@@ -16,7 +16,7 @@ The addon (`addon/FreecadCli/`) exposes exactly two RPC methods:
 - `ping()` — health check
 - `execute_code(code)` — execute arbitrary Python code on FreeCAD's main thread
 
-All business logic — document management, object CRUD, screenshot capture — lives in the CLI client (`src/freecad_cli/client.py`), which constructs Python code strings and sends them via `execute_code`.
+All business logic — document management, export, screenshot capture — lives in the CLI client (`src/freecad_cli/client.py`), which constructs Python code strings and sends them via `execute_code`.
 
 This means:
 

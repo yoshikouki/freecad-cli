@@ -128,8 +128,14 @@ freecad-cli create-document MyPart
 freecad-cli list-documents
 freecad-cli active-document
 freecad-cli set-active-document MyPart
-freecad-cli get-objects MyPart
-freecad-cli get-object MyPart Body
+```
+
+### export
+
+```sh
+freecad-cli export stl -o output.stl
+freecad-cli export step -o output.step --object MyBody
+freecad-cli export fcstd -o model.FCStd
 ```
 
 ### Screenshot

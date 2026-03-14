@@ -39,6 +39,16 @@ cat script.py | freecad-cli execute-code -
 echo 'print(1+1)' | freecad-cli execute-code -
 ```
 
+### export
+
+Export the active object to STL, STEP, or FCStd.
+
+```sh
+freecad-cli export stl -o output.stl
+freecad-cli export step -o output.step --object MyBody
+freecad-cli export fcstd -o model.FCStd
+```
+
 ### Other commands
 
 ```sh
