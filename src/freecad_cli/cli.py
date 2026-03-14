@@ -1,4 +1,8 @@
 import json
+import os
+import platform
+import sys
+from pathlib import Path
 
 import click
 
@@ -131,6 +135,34 @@ def insert_part(ctx, path):
     """Insert a part from the library."""
     result = ctx.obj["client"].insert_part_from_library(path)
     success(result)
+
+
+@cli.command("install-addon")
+def install_addon():
+    """Install the RPC server addon into FreeCAD."""
+    addon_src = Path(__file__).resolve().parent.parent.parent / "addon" / "FreecadCli"
+    if not addon_src.is_dir():
+        error(f"Addon source not found: {addon_src}", "invalid_input")
+
+    system = platform.system()
+    if system == "Darwin":
+        mod_dir = Path.home() / "Library" / "Application Support" / "FreeCAD" / "Mod"
+    elif system == "Linux":
+        mod_dir = Path.home() / ".local" / "share" / "FreeCAD" / "Mod"
+    else:
+        error(f"Unsupported platform: {system}", "invalid_input")
+
+    mod_dir.mkdir(parents=True, exist_ok=True)
+    link_path = mod_dir / "FreecadCli"
+
+    if link_path.is_symlink() or link_path.exists():
+        if link_path.is_symlink() and link_path.resolve() == addon_src.resolve():
+            success({"path": str(link_path), "message": "Already installed"})
+            return
+        error(f"Path already exists: {link_path}. Remove it first.", "invalid_input")
+
+    os.symlink(addon_src, link_path)
+    success({"path": str(link_path), "source": str(addon_src)})
 
 
 def _parse_properties(properties_json: str | None) -> dict | None:

@@ -1,3 +1,4 @@
+import json
 import socket
 import xmlrpc.client
 
@@ -10,7 +11,7 @@ class FreeCADClient:
         self._timeout = timeout
         self._proxy = xmlrpc.client.ServerProxy(self._url)
 
-    def call(self, method: str, *args):
+    def _rpc_call(self, method: str, *args):
         try:
             old_timeout = socket.getdefaulttimeout()
             socket.setdefaulttimeout(self._timeout)
@@ -27,40 +28,134 @@ class FreeCADClient:
         except OSError as e:
             error(f"Connection error: {e}", "connection_refused")
 
+    def _execute(self, code: str):
+        """Send Python code to FreeCAD for execution."""
+        result = self._rpc_call("execute_code", code)
+        if result and result.get("error"):
+            error(result["error"], "rpc_fault")
+        return result
+
     def ping(self):
-        return self.call("ping")
+        return self._rpc_call("ping")
 
     def create_document(self, name: str):
-        return self.call("create_document", name)
+        result = self._execute(f"""
+import FreeCAD
+doc = FreeCAD.newDocument({name!r})
+print(doc.Name)
+""")
+        return result["output"].strip()
 
     def list_documents(self):
-        return self.call("list_documents")
+        result = self._execute("""
+import FreeCAD
+print(__import__('json').dumps(list(FreeCAD.listDocuments().keys())))
+""")
+        return json.loads(result["output"])
 
     def create_object(self, document: str, type_name: str, name: str, properties: dict | None = None):
+        props_code = ""
         if properties:
-            return self.call("create_object", document, type_name, name, properties)
-        return self.call("create_object", document, type_name, name)
+            for key, value in properties.items():
+                props_code += f"obj.{key} = {value!r}\n"
+        result = self._execute(f"""
+import FreeCAD
+doc = FreeCAD.getDocument({document!r})
+obj = doc.addObject({type_name!r}, {name!r})
+{props_code}doc.recompute()
+print(obj.Name)
+""")
+        return result["output"].strip()
 
     def edit_object(self, document: str, name: str, properties: dict):
-        return self.call("edit_object", document, name, properties)
+        props_code = ""
+        for key, value in properties.items():
+            props_code += f"obj.{key} = {value!r}\n"
+        result = self._execute(f"""
+import FreeCAD
+doc = FreeCAD.getDocument({document!r})
+obj = doc.getObject({name!r})
+{props_code}doc.recompute()
+print(obj.Name)
+""")
+        return result["output"].strip()
 
     def delete_object(self, document: str, name: str):
-        return self.call("delete_object", document, name)
+        self._execute(f"""
+import FreeCAD
+doc = FreeCAD.getDocument({document!r})
+doc.removeObject({name!r})
+""")
+        return True
 
     def get_objects(self, document: str):
-        return self.call("get_objects", document)
+        result = self._execute(f"""
+import FreeCAD, json
+doc = FreeCAD.getDocument({document!r})
+objects = []
+for obj in doc.Objects:
+    objects.append({{"name": obj.Name, "type": obj.TypeId, "label": obj.Label}})
+print(json.dumps(objects))
+""")
+        return json.loads(result["output"])
 
     def get_object(self, document: str, name: str):
-        return self.call("get_object", document, name)
+        result = self._execute(f"""
+import FreeCAD, json
+doc = FreeCAD.getDocument({document!r})
+obj = doc.getObject({name!r})
+props = {{}}
+for p in obj.PropertiesList:
+    try:
+        v = getattr(obj, p)
+        json.dumps(v)
+        props[p] = v
+    except (TypeError, ValueError):
+        props[p] = str(v)
+info = {{"name": obj.Name, "type": obj.TypeId, "label": obj.Label, "properties": props}}
+print(json.dumps(info))
+""")
+        return json.loads(result["output"])
 
     def execute_code(self, code: str):
-        return self.call("execute_code", code)
+        return self._execute(code)
 
     def get_active_screenshot(self, width: int = 800):
-        return self.call("get_active_screenshot", width)
+        result = self._execute(f"""
+import FreeCADGui, tempfile, base64, os
+view = FreeCADGui.ActiveDocument.ActiveView
+tmp = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+tmp.close()
+view.saveImage(tmp.name, {width!r}, {width!r}, 'Current')
+with open(tmp.name, 'rb') as f:
+    data = base64.b64encode(f.read()).decode()
+os.unlink(tmp.name)
+print(data)
+""")
+        return result["output"].strip()
 
     def get_parts_list(self):
-        return self.call("get_parts_list")
+        result = self._execute("""
+import json, os
+parts_dir = os.path.join(os.path.dirname(__import__('FreeCAD').__file__), 'Mod', 'Parts_Library')
+parts = []
+if os.path.isdir(parts_dir):
+    for root, dirs, files in os.walk(parts_dir):
+        for f in files:
+            if f.endswith(('.FCStd', '.step', '.stp', '.iges', '.igs')):
+                parts.append(os.path.relpath(os.path.join(root, f), parts_dir))
+print(json.dumps(parts))
+""")
+        return json.loads(result["output"])
 
     def insert_part_from_library(self, path: str):
-        return self.call("insert_part_from_library", path)
+        result = self._execute(f"""
+import Part, FreeCAD
+doc = FreeCAD.ActiveDocument
+if doc is None:
+    doc = FreeCAD.newDocument('Unnamed')
+Part.insert({path!r}, doc.Name)
+doc.recompute()
+print(doc.Name)
+""")
+        return result["output"].strip()

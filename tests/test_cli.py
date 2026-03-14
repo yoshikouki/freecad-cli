@@ -6,26 +6,26 @@ from click.testing import CliRunner
 from freecad_cli.cli import cli
 
 
-def _mock_client():
+def _mock_proxy():
     return patch("freecad_cli.client.xmlrpc.client.ServerProxy")
 
 
 def test_create_document():
     runner = CliRunner()
-    with _mock_client() as mock_cls:
+    with _mock_proxy() as mock_cls:
         mock = MagicMock()
-        mock.create_document.return_value = "MyDoc"
+        mock.execute_code.return_value = {"output": "MyDoc\n", "error": ""}
         mock_cls.return_value = mock
         result = runner.invoke(cli, ["create-document", "MyDoc"])
         output = json.loads(result.output)
-        assert output["status"] == "ok"
+        assert output == {"status": "ok", "data": "MyDoc"}
 
 
 def test_list_documents():
     runner = CliRunner()
-    with _mock_client() as mock_cls:
+    with _mock_proxy() as mock_cls:
         mock = MagicMock()
-        mock.list_documents.return_value = ["Doc1", "Doc2"]
+        mock.execute_code.return_value = {"output": '["Doc1", "Doc2"]\n', "error": ""}
         mock_cls.return_value = mock
         result = runner.invoke(cli, ["list-documents"])
         output = json.loads(result.output)
@@ -34,70 +34,76 @@ def test_list_documents():
 
 def test_create_object_with_properties():
     runner = CliRunner()
-    with _mock_client() as mock_cls:
+    with _mock_proxy() as mock_cls:
         mock = MagicMock()
-        mock.create_object.return_value = "Box"
+        mock.execute_code.return_value = {"output": "MyBox\n", "error": ""}
         mock_cls.return_value = mock
         result = runner.invoke(cli, [
-            "create-object", "MyDoc", "Box", "MyBox",
+            "create-object", "MyDoc", "Part::Box", "MyBox",
             "--properties", '{"Length": 10}'
         ])
         output = json.loads(result.output)
-        assert output["status"] == "ok"
+        assert output == {"status": "ok", "data": "MyBox"}
 
 
 def test_create_object_without_properties():
     runner = CliRunner()
-    with _mock_client() as mock_cls:
+    with _mock_proxy() as mock_cls:
         mock = MagicMock()
-        mock.create_object.return_value = "Box"
+        mock.execute_code.return_value = {"output": "MyBox\n", "error": ""}
         mock_cls.return_value = mock
-        result = runner.invoke(cli, ["create-object", "MyDoc", "Box", "MyBox"])
+        result = runner.invoke(cli, ["create-object", "MyDoc", "Part::Box", "MyBox"])
         output = json.loads(result.output)
-        assert output["status"] == "ok"
+        assert output == {"status": "ok", "data": "MyBox"}
 
 
 def test_edit_object():
     runner = CliRunner()
-    with _mock_client() as mock_cls:
+    with _mock_proxy() as mock_cls:
         mock = MagicMock()
-        mock.edit_object.return_value = True
+        mock.execute_code.return_value = {"output": "MyBox\n", "error": ""}
         mock_cls.return_value = mock
         result = runner.invoke(cli, [
             "edit-object", "MyDoc", "MyBox",
             "--properties", '{"Length": 20}'
         ])
         output = json.loads(result.output)
-        assert output["status"] == "ok"
+        assert output == {"status": "ok", "data": "MyBox"}
 
 
 def test_delete_object():
     runner = CliRunner()
-    with _mock_client() as mock_cls:
+    with _mock_proxy() as mock_cls:
         mock = MagicMock()
-        mock.delete_object.return_value = True
+        mock.execute_code.return_value = {"output": "", "error": ""}
         mock_cls.return_value = mock
         result = runner.invoke(cli, ["delete-object", "MyDoc", "MyBox"])
         output = json.loads(result.output)
-        assert output["status"] == "ok"
+        assert output == {"status": "ok", "data": True}
 
 
 def test_get_objects():
     runner = CliRunner()
-    with _mock_client() as mock_cls:
+    with _mock_proxy() as mock_cls:
         mock = MagicMock()
-        mock.get_objects.return_value = [{"name": "MyBox"}]
+        mock.execute_code.return_value = {
+            "output": '[{"name": "MyBox", "type": "Part::Box", "label": "MyBox"}]\n',
+            "error": "",
+        }
         mock_cls.return_value = mock
         result = runner.invoke(cli, ["get-objects", "MyDoc"])
         output = json.loads(result.output)
-        assert output["status"] == "ok"
+        assert output["data"][0]["name"] == "MyBox"
 
 
 def test_get_object():
     runner = CliRunner()
-    with _mock_client() as mock_cls:
+    with _mock_proxy() as mock_cls:
         mock = MagicMock()
-        mock.get_object.return_value = {"name": "MyBox", "type": "Box"}
+        mock.execute_code.return_value = {
+            "output": '{"name": "MyBox", "type": "Part::Box", "label": "MyBox", "properties": {}}\n',
+            "error": "",
+        }
         mock_cls.return_value = mock
         result = runner.invoke(cli, ["get-object", "MyDoc", "MyBox"])
         output = json.loads(result.output)
@@ -106,9 +112,9 @@ def test_get_object():
 
 def test_execute_code():
     runner = CliRunner()
-    with _mock_client() as mock_cls:
+    with _mock_proxy() as mock_cls:
         mock = MagicMock()
-        mock.execute_code.return_value = "hello"
+        mock.execute_code.return_value = {"output": "hello\n", "error": ""}
         mock_cls.return_value = mock
         result = runner.invoke(cli, ["execute-code", 'print("hello")'])
         output = json.loads(result.output)
@@ -117,11 +123,24 @@ def test_execute_code():
 
 def test_invalid_properties_json():
     runner = CliRunner()
-    with _mock_client() as mock_cls:
+    with _mock_proxy() as mock_cls:
         mock = MagicMock()
         mock_cls.return_value = mock
         result = runner.invoke(cli, [
-            "create-object", "MyDoc", "Box", "MyBox",
+            "create-object", "MyDoc", "Part::Box", "MyBox",
             "--properties", "not-json"
         ])
+        assert result.exit_code != 0
+
+
+def test_rpc_error_propagated():
+    runner = CliRunner()
+    with _mock_proxy() as mock_cls:
+        mock = MagicMock()
+        mock.execute_code.return_value = {
+            "output": "",
+            "error": "Traceback: NameError: name 'foo' is not defined",
+        }
+        mock_cls.return_value = mock
+        result = runner.invoke(cli, ["create-document", "Test"])
         assert result.exit_code != 0
