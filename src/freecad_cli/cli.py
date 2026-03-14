@@ -16,7 +16,20 @@ from freecad_cli.output import error, success
 @click.option("--timeout", default=5.0, type=float, help="RPC timeout in seconds")
 @click.pass_context
 def cli(ctx, host, port, timeout):
-    """CLI tool for controlling FreeCAD via XML-RPC."""
+    """Control a running FreeCAD instance via shell.
+
+    The primary command is execute-code, which runs arbitrary Python inside
+    FreeCAD. It accepts inline code, a file (--file), or stdin (use '-').
+
+    \b
+    Quick start:
+      freecad-cli ping
+      freecad-cli execute-code 'print(FreeCAD.ActiveDocument.Name)'
+      freecad-cli execute-code --file script.py
+      cat script.py | freecad-cli execute-code -
+
+    All commands return JSON: {"status": "ok", "data": ...}
+    """
     ctx.ensure_object(dict)
     ctx.obj["client"] = FreeCADClient(host=host, port=port, timeout=timeout)
 
@@ -125,10 +138,21 @@ def get_object(ctx, document, name):
               help="Read code from a file")
 @click.pass_context
 def execute_code(ctx, code, file_path):
-    """Execute Python code in FreeCAD.
+    """Execute Python code in FreeCAD (inline, file, or stdin).
 
-    CODE can be inline Python code, or '-' to read from stdin.
-    Use --file to read code from a file.
+    \b
+    Three input modes:
+      freecad-cli execute-code 'import FreeCAD; print(FreeCAD.listDocuments())'
+      freecad-cli execute-code --file script.py
+      cat script.py | freecad-cli execute-code -
+
+    \b
+    The code runs inside the FreeCAD process with full access to:
+      FreeCAD, FreeCADGui, Part, PartDesign, Sketcher, Mesh, etc.
+
+    \b
+    Output is captured from stdout. Use print() to return results:
+      freecad-cli execute-code 'import json; print(json.dumps({"key": "value"}))'
     """
     if file_path and code:
         error("Cannot specify both --file and a code argument", "invalid_input")
@@ -148,7 +172,7 @@ def execute_code(ctx, code, file_path):
 @click.option("--width", default=800, type=int, help="Screenshot width in pixels")
 @click.pass_context
 def screenshot(ctx, width):
-    """Take a screenshot of the active view."""
+    """Take a screenshot of the active view (returns base64 PNG)."""
     result = ctx.obj["client"].get_active_screenshot(width)
     success(result)
 
