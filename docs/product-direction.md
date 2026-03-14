@@ -43,6 +43,28 @@ The following commands are thin wrappers around operations trivially done via `e
 
 These may be deprecated in a future release. Users should prefer `execute-code` for object manipulation.
 
+### Future High-Level Commands
+
+As usage patterns mature, high-level commands that encapsulate common multi-step workflows may be added. These would go beyond simple wrappers — they would encode domain knowledge (e.g., smart edge selection) that is tedious to express in raw Python:
+
+```
+# Potential future commands:
+freecad-cli export stl --output /path/to/output.stl
+freecad-cli export step --output /path/to/output.step
+freecad-cli fillet --edges vertical --radius 1.0
+freecad-cli fillet --edges top,bottom --exclude-region slot --radius 2.0
+freecad-cli pad --sketch HexSketch --height 20
+```
+
+Criteria for adding a high-level command:
+1. The operation appears frequently in real-world usage
+2. The raw `execute-code` equivalent requires non-trivial boilerplate (edge filtering, face identification, temp file handling)
+3. The command provides meaningful abstraction (not just argument forwarding)
+
+#### `export` Command (Near-Term Candidate)
+
+An `export` command for STL/STEP/FCStd is justified by the same multi-step orchestration rationale as `screenshot` — it involves path validation, format selection, and error handling that benefit from a dedicated command. This is the most likely next addition.
+
 ## Design Principles
 
 1. **`execute-code` is the escape hatch** — any FreeCAD operation must be possible through it, even if no dedicated command exists

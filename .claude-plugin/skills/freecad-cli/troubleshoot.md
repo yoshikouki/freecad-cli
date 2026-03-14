@@ -79,3 +79,25 @@ freecad-cli screenshot
 ### `connection_refused` during operation
 
 FreeCAD may have crashed. Restart it — the addon auto-starts.
+
+### Edge/Face numbers don't match after adding features
+
+Edge and Face indices (`Edge1`, `Face3`, etc.) are renumbered after every boolean operation (Pocket, Fillet, etc.). Never hardcode indices across features. Instead, re-enumerate by iterating `feature.Shape.Edges` or `feature.Shape.Faces` and filtering by coordinates:
+
+```python
+# Find the top face by Z coordinate
+for i, face in enumerate(feature.Shape.Faces):
+    if abs(face.CenterOfMass.z - expected_z) < 0.01:
+        face_name = f"Face{i+1}"
+```
+
+### Fillet fails with "Edge does not belong to the shape"
+
+The edge list references a previous feature's numbering. Always use the **latest feature** in the tree (the one just before the Fillet) as the base, and enumerate its edges fresh.
+
+### Screenshot image is too large
+
+If the screenshot causes issues (e.g., MCP response size limits), reduce dimensions:
+```sh
+freecad-cli screenshot --width 800 --height 600
+```
