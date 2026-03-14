@@ -75,6 +75,7 @@ All commands return JSON output:
 
 ```sh
 uv sync
+git config core.hooksPath .githooks
 ```
 
 ### Install as a command
