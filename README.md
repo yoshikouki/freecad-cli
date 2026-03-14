@@ -1,8 +1,8 @@
 # freecad-cli
 
-FreeCAD を AI Agent からシェル経由で操作するための Python CLI ツール。XML-RPC（port 9875）で FreeCAD と通信する。
+A Python CLI tool for controlling FreeCAD from AI Agents via shell. Communicates with FreeCAD over XML-RPC (port 9875).
 
-## アーキテクチャ
+## Architecture
 
 ```
 AI Agent → shell → freecad-cli (Python CLI)
@@ -10,7 +10,7 @@ AI Agent → shell → freecad-cli (Python CLI)
                     FreeCAD + Addon (RPC Server)
 ```
 
-## 使い方
+## Usage
 
 ```sh
 freecad-cli ping
@@ -19,35 +19,35 @@ freecad-cli create-object MyDoc Box MyBox --properties '{"Length": 10}'
 freecad-cli get-objects MyDoc
 ```
 
-すべてのコマンドは JSON で結果を返す。
+All commands return JSON output:
 
 ```json
 {"status": "ok", "data": true}
 ```
 
-## 開発
+## Development
 
-### セットアップ
+### Setup
 
 ```sh
 uv sync
 ```
 
-### コマンドとして使えるようにする
+### Install as a command
 
 ```sh
 uv tool install -e .
 ```
 
-editable モードでインストールされるため、ソースコードの変更が即座に反映される。
+Installed in editable mode — source code changes take effect immediately.
 
-アンインストールする場合:
+To uninstall:
 
 ```sh
 uv tool uninstall freecad-cli
 ```
 
-### テスト
+### Test
 
 ```sh
 uv run pytest
