@@ -7,10 +7,10 @@ from pathlib import Path
 import click
 
 from freecad_cli.client import FreeCADClient
-from freecad_cli.output import error, success
+from freecad_cli.output import error, success, warning
 
 COMMAND_SECTIONS = {
-    "Core": ["execute-code", "ping", "screenshot"],
+    "Core": ["execute-code", "export", "ping", "screenshot"],
     "Documents": ["active-document", "create-document", "list-documents", "set-active-document"],
     "Objects": ["create-object", "edit-object", "delete-object", "get-object", "get-objects"],
     "Parts Library": ["list-parts", "insert-part"],
@@ -111,7 +111,8 @@ def list_documents(ctx):
 @click.option("--properties", default=None, help="JSON string of properties")
 @click.pass_context
 def create_object(ctx, document, type_name, name, properties):
-    """Create an object in a document."""
+    """[DEPRECATED] Create an object in a document. Use execute-code instead."""
+    warning("create-object is deprecated. Use 'execute-code' for direct FreeCAD Python execution.")
     props = _parse_properties(properties)
     result = ctx.obj["client"].create_object(document, type_name, name, props)
     success(result)
@@ -123,7 +124,8 @@ def create_object(ctx, document, type_name, name, properties):
 @click.option("--properties", required=True, help="JSON string of properties")
 @click.pass_context
 def edit_object(ctx, document, name, properties):
-    """Edit an object's properties."""
+    """[DEPRECATED] Edit an object's properties. Use execute-code instead."""
+    warning("edit-object is deprecated. Use 'execute-code' for direct FreeCAD Python execution.")
     props = _parse_properties(properties)
     if props is None:
         error("--properties is required", "invalid_input")
@@ -136,7 +138,8 @@ def edit_object(ctx, document, name, properties):
 @click.argument("name")
 @click.pass_context
 def delete_object(ctx, document, name):
-    """Delete an object from a document."""
+    """[DEPRECATED] Delete an object from a document. Use execute-code instead."""
+    warning("delete-object is deprecated. Use 'execute-code' for direct FreeCAD Python execution.")
     result = ctx.obj["client"].delete_object(document, name)
     success(result)
 
@@ -145,7 +148,8 @@ def delete_object(ctx, document, name):
 @click.argument("document")
 @click.pass_context
 def get_objects(ctx, document):
-    """List all objects in a document."""
+    """[DEPRECATED] List all objects in a document. Use execute-code instead."""
+    warning("get-objects is deprecated. Use 'execute-code' for direct FreeCAD Python execution.")
     result = ctx.obj["client"].get_objects(document)
     success(result)
 
@@ -155,7 +159,8 @@ def get_objects(ctx, document):
 @click.argument("name")
 @click.pass_context
 def get_object(ctx, document, name):
-    """Get details of a specific object."""
+    """[DEPRECATED] Get details of a specific object. Use execute-code instead."""
+    warning("get-object is deprecated. Use 'execute-code' for direct FreeCAD Python execution.")
     result = ctx.obj["client"].get_object(document, name)
     success(result)
 
@@ -202,6 +207,17 @@ def execute_code(ctx, code, file_path):
 def screenshot(ctx, width):
     """Take a screenshot of the active view (returns base64 PNG)."""
     result = ctx.obj["client"].get_active_screenshot(width)
+    success(result)
+
+
+@cli.command()
+@click.argument("format", type=click.Choice(["stl", "step", "fcstd"]))
+@click.option("--output", "-o", required=True, help="Output file path")
+@click.option("--object", "object_name", default=None, help="Object name to export (default: Body or first object)")
+@click.pass_context
+def export(ctx, format, output, object_name):
+    """Export an object to STL, STEP, or FCStd format."""
+    result = ctx.obj["client"].export_object(format, output, object_name)
     success(result)
 
 
