@@ -10,7 +10,7 @@ flowchart TD
     B -->|XML-RPC<br/>localhost:9875| C[FreeCAD + Addon<br/>thin eval proxy]
 ```
 
-The addon is a minimal XML-RPC server that runs inside FreeCAD. It only exposes `ping` and `execute_code` — all business logic lives in the CLI client. Once installed, the addon never needs to be updated.
+The addon is a minimal XML-RPC server that runs inside FreeCAD. It only exposes `ping` and `execute_code` — all business logic lives in the CLI client. Once installed, the addon never needs to be updated. See [docs/architecture.md](docs/architecture.md) for design rationale and [docs/product-direction.md](docs/product-direction.md) for the command philosophy.
 
 > **Security note:** `execute-code` runs arbitrary Python inside the FreeCAD process. The RPC server binds to `127.0.0.1` only — it is not accessible over the network. Only connect to a FreeCAD instance you control.
 
@@ -38,11 +38,28 @@ freecad-cli ping
 
 ## Usage
 
+### execute-code
+
+The core command. Sends Python code to FreeCAD for execution.
+
 ```sh
-freecad-cli create-document MyDoc
-freecad-cli create-object MyDoc Part::Box MyBox --properties '{"Length": 10}'
-freecad-cli get-objects MyDoc
+# Inline code
 freecad-cli execute-code 'print(FreeCAD.ActiveDocument.Name)'
+
+# Read from a file
+freecad-cli execute-code --file script.py
+
+# Pipe from stdin
+cat script.py | freecad-cli execute-code -
+echo 'print(1+1)' | freecad-cli execute-code -
+```
+
+### Other commands
+
+```sh
+freecad-cli ping
+freecad-cli create-document MyDoc
+freecad-cli active-document
 freecad-cli screenshot --width 800
 ```
 

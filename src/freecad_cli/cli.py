@@ -1,7 +1,6 @@
 import json
 import os
 import platform
-import sys
 from pathlib import Path
 
 import click
@@ -120,10 +119,26 @@ def get_object(ctx, document, name):
 
 
 @cli.command("execute-code")
-@click.argument("code")
+@click.argument("code", required=False, default=None)
+@click.option("--file", "file_path", default=None, type=click.Path(exists=True),
+              help="Read code from a file")
 @click.pass_context
-def execute_code(ctx, code):
-    """Execute Python code in FreeCAD."""
+def execute_code(ctx, code, file_path):
+    """Execute Python code in FreeCAD.
+
+    CODE can be inline Python code, or '-' to read from stdin.
+    Use --file to read code from a file.
+    """
+    if file_path and code:
+        error("Cannot specify both --file and a code argument", "invalid_input")
+
+    if file_path:
+        code = Path(file_path).read_text()
+    elif code == "-" or (code is None and not sys.stdin.isatty()):
+        code = sys.stdin.read()
+    elif code is None:
+        error("No code provided. Pass inline code, use --file, or pipe to stdin with '-'", "invalid_input")
+
     result = ctx.obj["client"].execute_code(code)
     success(result)
 
