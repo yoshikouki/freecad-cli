@@ -16,23 +16,6 @@ The addon is a minimal XML-RPC server that runs inside FreeCAD. It only exposes 
 
 ## Setup
 
-### With Claude Code (Plugin)
-
-```bash
-/plugin marketplace add yoshikouki/freecad-cli
-/plugin install freecad-cli@yoshikouki-freecad-cli
-```
-
-After installing the plugin, use the `/freecad-cli` skill to set up the CLI and FreeCAD addon.
-
-### With AI Agent
-
-Copy and paste this prompt to your AI agent:
-
-> Install freecad-cli by following the setup guide at `SETUP_AGENT.md` in the repository: https://github.com/yoshikouki/freecad-cli. If any prerequisites are missing, ask me before installing them.
-
-### Manual
-
 1. Install the CLI: `uv tool install -e .`
 2. Install the FreeCAD addon: `freecad-cli install-addon`
 3. Restart FreeCAD
@@ -70,6 +53,25 @@ All commands return JSON output:
 ```json
 {"status": "ok", "data": true}
 ```
+
+## Agent Skills
+
+### Claude Code
+
+Install as a Claude Code plugin:
+
+```bash
+/plugin marketplace add yoshikouki/freecad-cli
+/plugin install freecad-cli@yoshikouki-freecad-cli
+```
+
+The plugin provides the `/freecad-cli` skill (setup, operation reference, troubleshooting) and a `freecad-operator` agent for CAD modeling tasks.
+
+### Other AI Agents
+
+Copy and paste this prompt to your AI agent:
+
+> Install freecad-cli by following the setup guide at `SETUP_AGENT.md` in the repository: https://github.com/yoshikouki/freecad-cli. If any prerequisites are missing, ask me before installing them.
 
 ## Development
 
