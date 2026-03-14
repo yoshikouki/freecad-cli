@@ -1,0 +1,13 @@
+{
+  "name": "freecad-cli",
+  "version": "1.0.0",
+  "description": "Skills for setting up and operating freecad-cli — a CLI tool that controls a running FreeCAD instance via XML-RPC.",
+  "author": {
+    "name": "yoshikouki",
+    "url": "https://github.com/yoshikouki/freecad-cli"
+  },
+  "homepage": "https://github.com/yoshikouki/freecad-cli",
+  "repository": "https://github.com/yoshikouki/freecad-cli",
+  "license": "LGPL-2.1-or-later",
+  "keywords": ["freecad", "cad", "3d-modeling", "rpc", "ai-agent"]
+}
