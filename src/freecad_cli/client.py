@@ -38,6 +38,31 @@ class FreeCADClient:
     def ping(self):
         return self._rpc_call("ping")
 
+    def get_active_document(self):
+        result = self._execute("""
+import FreeCAD, FreeCADGui, json
+doc = FreeCAD.ActiveDocument
+gui_doc = FreeCADGui.ActiveDocument
+info = {
+    "name": doc.Name if doc else None,
+    "label": doc.Label if doc else None,
+    "gui_active": gui_doc.Document.Name if gui_doc else None,
+}
+print(json.dumps(info))
+""")
+        return json.loads(result["output"])
+
+    def set_active_document(self, name: str):
+        result = self._execute(f"""
+import FreeCAD, FreeCADGui
+FreeCAD.setActiveDocument({name!r})
+FreeCADGui.setActiveDocument({name!r})
+FreeCADGui.ActiveDocument.ActiveView.viewIsometric()
+FreeCADGui.ActiveDocument.ActiveView.fitAll()
+print(FreeCAD.ActiveDocument.Name)
+""")
+        return result["output"].strip()
+
     def create_document(self, name: str):
         result = self._execute(f"""
 import FreeCAD

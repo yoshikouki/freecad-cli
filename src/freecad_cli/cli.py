@@ -29,6 +29,23 @@ def ping(ctx):
     success(result)
 
 
+@cli.command("active-document")
+@click.pass_context
+def active_document(ctx):
+    """Show the active document and GUI state."""
+    result = ctx.obj["client"].get_active_document()
+    success(result)
+
+
+@cli.command("set-active-document")
+@click.argument("name")
+@click.pass_context
+def set_active_document(ctx, name):
+    """Switch the active document and fit the view."""
+    result = ctx.obj["client"].set_active_document(name)
+    success(result)
+
+
 @cli.command("create-document")
 @click.argument("name")
 @click.pass_context
