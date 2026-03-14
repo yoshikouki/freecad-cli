@@ -5,7 +5,7 @@ A Python CLI tool for controlling FreeCAD from AI Agents via shell. Communicates
 ## Architecture
 
 ```mermaid
-flowchart LR
+flowchart TD
     A[AI Agent] -->|shell| B[freecad-cli<br/>Python CLI]
     B -->|XML-RPC<br/>localhost:9875| C[FreeCAD + Addon<br/>thin eval proxy]
 ```
