@@ -16,6 +16,15 @@ The addon is a minimal XML-RPC server that runs inside FreeCAD. It only exposes 
 
 ## Setup
 
+### With Claude Code (Plugin)
+
+```bash
+/plugin marketplace add yoshikouki/freecad-cli
+/plugin install freecad-cli@yoshikouki-freecad-cli
+```
+
+After installing the plugin, use the `/freecad-cli` skill to set up the CLI and FreeCAD addon.
+
 ### With AI Agent
 
 Copy and paste this prompt to your AI agent:
