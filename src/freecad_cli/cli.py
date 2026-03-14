@@ -1,4 +1,3 @@
-import json
 import os
 import platform
 import sys
@@ -7,12 +6,11 @@ from pathlib import Path
 import click
 
 from freecad_cli.client import FreeCADClient
-from freecad_cli.output import error, success, warning
+from freecad_cli.output import error, success
 
 COMMAND_SECTIONS = {
     "Core": ["execute-code", "export", "ping", "screenshot"],
     "Documents": ["active-document", "create-document", "list-documents", "set-active-document"],
-    "Objects": ["create-object", "edit-object", "delete-object", "get-object", "get-objects"],
     "Parts Library": ["list-parts", "insert-part"],
     "Setup": ["install-addon"],
 }
@@ -101,67 +99,6 @@ def create_document(ctx, name):
 def list_documents(ctx):
     """List all open documents."""
     result = ctx.obj["client"].list_documents()
-    success(result)
-
-
-@cli.command("create-object")
-@click.argument("document")
-@click.argument("type_name")
-@click.argument("name")
-@click.option("--properties", default=None, help="JSON string of properties")
-@click.pass_context
-def create_object(ctx, document, type_name, name, properties):
-    """[DEPRECATED] Create an object in a document. Use execute-code instead."""
-    warning("create-object is deprecated. Use 'execute-code' for direct FreeCAD Python execution.")
-    props = _parse_properties(properties)
-    result = ctx.obj["client"].create_object(document, type_name, name, props)
-    success(result)
-
-
-@cli.command("edit-object")
-@click.argument("document")
-@click.argument("name")
-@click.option("--properties", required=True, help="JSON string of properties")
-@click.pass_context
-def edit_object(ctx, document, name, properties):
-    """[DEPRECATED] Edit an object's properties. Use execute-code instead."""
-    warning("edit-object is deprecated. Use 'execute-code' for direct FreeCAD Python execution.")
-    props = _parse_properties(properties)
-    if props is None:
-        error("--properties is required", "invalid_input")
-    result = ctx.obj["client"].edit_object(document, name, props)
-    success(result)
-
-
-@cli.command("delete-object")
-@click.argument("document")
-@click.argument("name")
-@click.pass_context
-def delete_object(ctx, document, name):
-    """[DEPRECATED] Delete an object from a document. Use execute-code instead."""
-    warning("delete-object is deprecated. Use 'execute-code' for direct FreeCAD Python execution.")
-    result = ctx.obj["client"].delete_object(document, name)
-    success(result)
-
-
-@cli.command("get-objects")
-@click.argument("document")
-@click.pass_context
-def get_objects(ctx, document):
-    """[DEPRECATED] List all objects in a document. Use execute-code instead."""
-    warning("get-objects is deprecated. Use 'execute-code' for direct FreeCAD Python execution.")
-    result = ctx.obj["client"].get_objects(document)
-    success(result)
-
-
-@cli.command("get-object")
-@click.argument("document")
-@click.argument("name")
-@click.pass_context
-def get_object(ctx, document, name):
-    """[DEPRECATED] Get details of a specific object. Use execute-code instead."""
-    warning("get-object is deprecated. Use 'execute-code' for direct FreeCAD Python execution.")
-    result = ctx.obj["client"].get_object(document, name)
     success(result)
 
 
@@ -266,10 +203,3 @@ def install_addon():
     success({"path": str(link_path), "source": str(addon_src)})
 
 
-def _parse_properties(properties_json: str | None) -> dict | None:
-    if properties_json is None:
-        return None
-    try:
-        return json.loads(properties_json)
-    except json.JSONDecodeError as e:
-        error(f"Invalid JSON for properties: {e}", "invalid_input")

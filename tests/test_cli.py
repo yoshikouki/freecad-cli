@@ -11,12 +11,6 @@ def _mock_proxy():
     return patch("freecad_cli.client.xmlrpc.client.ServerProxy")
 
 
-def _parse_output(result_output):
-    """Parse the last JSON line from output (skipping deprecation warnings)."""
-    lines = [line for line in result_output.strip().splitlines() if line.strip()]
-    return json.loads(lines[-1])
-
-
 def test_create_document():
     runner = CliRunner()
     with _mock_proxy() as mock_cls:
@@ -39,84 +33,6 @@ def test_list_documents():
         assert output["data"] == ["Doc1", "Doc2"]
 
 
-def test_create_object_with_properties():
-    runner = CliRunner()
-    with _mock_proxy() as mock_cls:
-        mock = MagicMock()
-        mock.execute_code.return_value = {"output": "MyBox\n", "error": ""}
-        mock_cls.return_value = mock
-        result = runner.invoke(cli, [
-            "create-object", "MyDoc", "Part::Box", "MyBox",
-            "--properties", '{"Length": 10}'
-        ])
-        output = _parse_output(result.output)
-        assert output == {"status": "ok", "data": "MyBox"}
-
-
-def test_create_object_without_properties():
-    runner = CliRunner()
-    with _mock_proxy() as mock_cls:
-        mock = MagicMock()
-        mock.execute_code.return_value = {"output": "MyBox\n", "error": ""}
-        mock_cls.return_value = mock
-        result = runner.invoke(cli, ["create-object", "MyDoc", "Part::Box", "MyBox"])
-        output = _parse_output(result.output)
-        assert output == {"status": "ok", "data": "MyBox"}
-
-
-def test_edit_object():
-    runner = CliRunner()
-    with _mock_proxy() as mock_cls:
-        mock = MagicMock()
-        mock.execute_code.return_value = {"output": "MyBox\n", "error": ""}
-        mock_cls.return_value = mock
-        result = runner.invoke(cli, [
-            "edit-object", "MyDoc", "MyBox",
-            "--properties", '{"Length": 20}'
-        ])
-        output = _parse_output(result.output)
-        assert output == {"status": "ok", "data": "MyBox"}
-
-
-def test_delete_object():
-    runner = CliRunner()
-    with _mock_proxy() as mock_cls:
-        mock = MagicMock()
-        mock.execute_code.return_value = {"output": "", "error": ""}
-        mock_cls.return_value = mock
-        result = runner.invoke(cli, ["delete-object", "MyDoc", "MyBox"])
-        output = _parse_output(result.output)
-        assert output == {"status": "ok", "data": True}
-
-
-def test_get_objects():
-    runner = CliRunner()
-    with _mock_proxy() as mock_cls:
-        mock = MagicMock()
-        mock.execute_code.return_value = {
-            "output": '[{"name": "MyBox", "type": "Part::Box", "label": "MyBox"}]\n',
-            "error": "",
-        }
-        mock_cls.return_value = mock
-        result = runner.invoke(cli, ["get-objects", "MyDoc"])
-        output = _parse_output(result.output)
-        assert output["data"][0]["name"] == "MyBox"
-
-
-def test_get_object():
-    runner = CliRunner()
-    with _mock_proxy() as mock_cls:
-        mock = MagicMock()
-        mock.execute_code.return_value = {
-            "output": '{"name": "MyBox", "type": "Part::Box", "label": "MyBox", "properties": {}}\n',
-            "error": "",
-        }
-        mock_cls.return_value = mock
-        result = runner.invoke(cli, ["get-object", "MyDoc", "MyBox"])
-        output = _parse_output(result.output)
-        assert output["data"]["name"] == "MyBox"
-
-
 def test_execute_code():
     runner = CliRunner()
     with _mock_proxy() as mock_cls:
@@ -126,18 +42,6 @@ def test_execute_code():
         result = runner.invoke(cli, ["execute-code", 'print("hello")'])
         output = json.loads(result.output)
         assert output["status"] == "ok"
-
-
-def test_invalid_properties_json():
-    runner = CliRunner()
-    with _mock_proxy() as mock_cls:
-        mock = MagicMock()
-        mock_cls.return_value = mock
-        result = runner.invoke(cli, [
-            "create-object", "MyDoc", "Part::Box", "MyBox",
-            "--properties", "not-json"
-        ])
-        assert result.exit_code != 0
 
 
 def test_execute_code_from_stdin():
@@ -220,25 +124,6 @@ def test_export_invalid_format():
         mock_cls.return_value = mock
         result = runner.invoke(cli, ["export", "obj", "-o", "/tmp/out.obj"])
         assert result.exit_code != 0
-
-
-def test_crud_deprecation_warning():
-    runner = CliRunner()
-    with _mock_proxy() as mock_cls:
-        mock = MagicMock()
-        mock.execute_code.return_value = {
-            "output": '[{"name": "X", "type": "Part::Box", "label": "X"}]\n',
-            "error": "",
-        }
-        mock_cls.return_value = mock
-        result = runner.invoke(cli, ["get-objects", "MyDoc"])
-        lines = result.output.strip().splitlines()
-        assert len(lines) == 2
-        warning_line = json.loads(lines[0])
-        assert warning_line["status"] == "warning"
-        assert "deprecated" in warning_line["message"].lower()
-        data_line = json.loads(lines[1])
-        assert data_line["status"] == "ok"
 
 
 def test_rpc_error_propagated():
