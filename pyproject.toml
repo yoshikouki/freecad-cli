@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "freecad-cli"
+version = "0.1.0"
+description = "CLI tool for controlling FreeCAD via XML-RPC"
+requires-python = ">=3.12"
+dependencies = [
+    "click>=8.1",
+]
+
+[project.scripts]
+freecad-cli = "freecad_cli.cli:cli"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/freecad_cli"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+]
