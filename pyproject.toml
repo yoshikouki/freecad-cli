@@ -6,6 +6,8 @@ build-backend = "hatchling.build"
 name = "freecad-cli"
 version = "0.1.0"
 description = "CLI tool for controlling FreeCAD via XML-RPC"
+license = "LGPL-2.1-or-later"
+license-files = ["LICENSE"]
 requires-python = ">=3.12"
 dependencies = [
     "click>=8.1",
@@ -23,4 +25,5 @@ testpaths = ["tests"]
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
+    "ruff>=0.9",
 ]
