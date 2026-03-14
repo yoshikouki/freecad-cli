@@ -16,25 +16,18 @@ The addon is a minimal XML-RPC server that runs inside FreeCAD. It only exposes 
 
 ## Setup
 
-### 1. Install the CLI
+### With AI Agent
 
-```sh
-uv tool install -e .
-```
+Copy and paste this prompt to your AI agent:
 
-### 2. Install the FreeCAD addon
+> Install freecad-cli by following the setup guide at `SETUP_AGENT.md` in the repository: https://github.com/yoshikouki/freecad-cli. If any prerequisites are missing, ask me before installing them.
 
-```sh
-freecad-cli install-addon
-```
+### Manual
 
-This creates a symlink from FreeCAD's Mod directory to the addon source. Restart FreeCAD after the first install — the RPC server will auto-start on every launch.
-
-### 3. Verify
-
-```sh
-freecad-cli ping
-```
+1. Install the CLI: `uv tool install -e .`
+2. Install the FreeCAD addon: `freecad-cli install-addon`
+3. Restart FreeCAD
+4. Verify: `freecad-cli ping`
 
 ## Usage
 
