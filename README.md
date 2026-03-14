@@ -4,10 +4,10 @@ A Python CLI tool for controlling FreeCAD from AI Agents via shell. Communicates
 
 ## Architecture
 
-```
-AI Agent → shell → freecad-cli (Python CLI)
-                        ↓ XML-RPC (localhost:9875)
-                    FreeCAD + Addon (thin eval proxy)
+```mermaid
+flowchart LR
+    A[AI Agent] -->|shell| B[freecad-cli<br/>Python CLI]
+    B -->|XML-RPC<br/>localhost:9875| C[FreeCAD + Addon<br/>thin eval proxy]
 ```
 
 The addon is a minimal XML-RPC server that runs inside FreeCAD. It only exposes `ping` and `execute_code` — all business logic lives in the CLI client. Once installed, the addon never needs to be updated.
