@@ -17,7 +17,7 @@ The addon is a minimal XML-RPC server that runs inside FreeCAD. It only exposes 
 ## Setup
 
 1. Install the CLI: `uv tool install -e .`
-2. Install the FreeCAD addon: `freecad-cli install-addon`
+2. Install the FreeCAD addon: `freecad-cli install-addon` (symlink on macOS/Linux, directory junction on Windows)
 3. Restart FreeCAD
 4. Verify: `freecad-cli ping`
 
