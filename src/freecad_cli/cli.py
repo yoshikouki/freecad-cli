@@ -175,6 +175,24 @@ def insert_part(ctx, path):
     success(result)
 
 
+def _versioned_mod_dir(base: Path) -> Path:
+    """Return FreeCAD's user Mod dir under a `.../FreeCAD` directory.
+
+    FreeCAD 1.1+ uses a versioned user data dir (e.g. ``FreeCAD/v1-1``), so the
+    addon must land in ``FreeCAD/v1-1/Mod`` rather than ``FreeCAD/Mod``. Older
+    releases use the unversioned dir. Prefer the newest versioned dir present.
+    """
+    versioned = []
+    if base.is_dir():
+        for child in base.iterdir():
+            parts = child.name[1:].split("-")
+            if child.is_dir() and child.name.startswith("v") and all(p.isdigit() for p in parts):
+                versioned.append((tuple(int(p) for p in parts), child))
+    if versioned:
+        return max(versioned)[1] / "Mod"
+    return base / "Mod"
+
+
 @cli.command("install-addon")
 def install_addon():
     """Install the RPC server addon into FreeCAD."""
@@ -184,9 +202,9 @@ def install_addon():
 
     system = platform.system()
     if system == "Darwin":
-        mod_dir = Path.home() / "Library" / "Application Support" / "FreeCAD" / "Mod"
+        mod_dir = _versioned_mod_dir(Path.home() / "Library" / "Application Support" / "FreeCAD")
     elif system == "Linux":
-        mod_dir = Path.home() / ".local" / "share" / "FreeCAD" / "Mod"
+        mod_dir = _versioned_mod_dir(Path.home() / ".local" / "share" / "FreeCAD")
     else:
         error(f"Unsupported platform: {system}", "invalid_input")
 

@@ -137,3 +137,25 @@ def test_rpc_error_propagated():
         mock_cls.return_value = mock
         result = runner.invoke(cli, ["create-document", "Test"])
         assert result.exit_code != 0
+
+
+def test_versioned_mod_dir_prefers_newest_versioned_dir(tmp_path):
+    from freecad_cli.cli import _versioned_mod_dir
+
+    for name in ["v1-1", "v1-10", "v0-21", "Macro"]:
+        (tmp_path / name).mkdir(parents=True)
+    assert _versioned_mod_dir(tmp_path) == tmp_path / "v1-10" / "Mod"
+
+
+def test_versioned_mod_dir_falls_back_to_unversioned(tmp_path):
+    from freecad_cli.cli import _versioned_mod_dir
+
+    assert _versioned_mod_dir(tmp_path) == tmp_path / "Mod"
+
+
+def test_versioned_mod_dir_ignores_non_versioned_entries(tmp_path):
+    from freecad_cli.cli import _versioned_mod_dir
+
+    (tmp_path / "vNext").mkdir()
+    (tmp_path / "Mod").mkdir()
+    assert _versioned_mod_dir(tmp_path) == tmp_path / "Mod"
