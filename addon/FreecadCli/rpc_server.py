@@ -11,7 +11,10 @@ import threading
 import traceback
 from xmlrpc.server import SimpleXMLRPCServer
 
-from PySide2 import QtCore
+try:
+    from PySide6 import QtCore
+except ImportError:
+    from PySide2 import QtCore
 
 _server = None
 _thread = None
