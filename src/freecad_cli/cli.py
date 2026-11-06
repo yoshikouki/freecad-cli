@@ -175,6 +175,24 @@ def insert_part(ctx, path):
     success(result)
 
 
+def _windows_mod_dir(appdata: Path) -> Path:
+    """Return FreeCAD's user Mod dir on Windows.
+
+    FreeCAD 1.1+ uses a versioned user data dir (e.g. %APPDATA%/FreeCAD/v1-1);
+    older versions use %APPDATA%/FreeCAD directly. Prefer the newest versioned dir.
+    """
+    base = appdata / "FreeCAD"
+    versioned = []
+    if base.is_dir():
+        for child in base.iterdir():
+            parts = child.name[1:].split("-")
+            if child.is_dir() and child.name.startswith("v") and all(p.isdigit() for p in parts):
+                versioned.append((tuple(int(p) for p in parts), child))
+    if versioned:
+        return max(versioned)[1] / "Mod"
+    return base / "Mod"
+
+
 @cli.command("install-addon")
 def install_addon():
     """Install the RPC server addon into FreeCAD."""
@@ -187,19 +205,28 @@ def install_addon():
         mod_dir = Path.home() / "Library" / "Application Support" / "FreeCAD" / "Mod"
     elif system == "Linux":
         mod_dir = Path.home() / ".local" / "share" / "FreeCAD" / "Mod"
+    elif system == "Windows":
+        mod_dir = _windows_mod_dir(Path(os.environ["APPDATA"]))
     else:
         error(f"Unsupported platform: {system}", "invalid_input")
 
     mod_dir.mkdir(parents=True, exist_ok=True)
     link_path = mod_dir / "FreecadCli"
 
-    if link_path.is_symlink() or link_path.exists():
-        if link_path.is_symlink() and link_path.resolve() == addon_src.resolve():
+    if link_path.is_symlink() or link_path.is_junction() or link_path.exists():
+        is_link = link_path.is_symlink() or link_path.is_junction()
+        if is_link and link_path.resolve() == addon_src.resolve():
             success({"path": str(link_path), "message": "Already installed"})
             return
         error(f"Path already exists: {link_path}. Remove it first.", "invalid_input")
 
-    os.symlink(addon_src, link_path)
+    if system == "Windows":
+        # Symlinks need admin or Developer Mode on Windows; directory junctions do not.
+        import _winapi
+
+        _winapi.CreateJunction(str(addon_src), str(link_path))
+    else:
+        os.symlink(addon_src, link_path)
     success({"path": str(link_path), "source": str(addon_src)})
 
 
