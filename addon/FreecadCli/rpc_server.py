@@ -11,7 +11,9 @@ import threading
 import traceback
 from xmlrpc.server import SimpleXMLRPCServer
 
-from PySide2 import QtCore
+# FreeCAD's PySide wrapper resolves to the binding FreeCAD itself was built
+# with (PySide2 or PySide6), so the addon never loads a second Qt.
+from PySide import QtCore
 
 _server = None
 _thread = None
@@ -29,6 +31,8 @@ class _MainThreadExecutor(QtCore.QObject):
         super().__init__()
         self.execute_requested.connect(self._run)
 
+    # Declared as a Slot so the queued connection to the GUI thread is explicit.
+    @QtCore.Slot(str, object)
     def _run(self, code, result_queue):
         stdout_capture = io.StringIO()
         old_stdout = sys.stdout
