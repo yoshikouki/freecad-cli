@@ -98,9 +98,24 @@ print(data)
     def get_parts_list(self):
         result = self._execute("""
 import json, os
-parts_dir = os.path.join(os.path.dirname(__import__('FreeCAD').__file__), 'Mod', 'Parts_Library')
+import FreeCAD as App
+# Locate Mod/Parts_Library across FreeCAD's known dirs. Packaged builds
+# (macOS .app, AppImage) may not expose FreeCAD.__file__, so use the
+# cross-platform directory accessors instead.
+candidates = []
+for fn in ('getUserAppDataDir', 'getResourceDir', 'getHomePath'):
+    accessor = getattr(App, fn, None)
+    if accessor is None:
+        continue
+    try:
+        base = accessor()
+    except Exception:
+        base = None
+    if base:
+        candidates.append(os.path.join(base, 'Mod', 'Parts_Library'))
+parts_dir = next((d for d in candidates if os.path.isdir(d)), None)
 parts = []
-if os.path.isdir(parts_dir):
+if parts_dir:
     for root, dirs, files in os.walk(parts_dir):
         for f in files:
             if f.endswith(('.FCStd', '.step', '.stp', '.iges', '.igs')):
