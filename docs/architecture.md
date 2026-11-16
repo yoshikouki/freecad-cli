@@ -30,7 +30,7 @@ FreeCAD's GUI operations (creating documents, modifying objects, taking screensh
 
 The addon solves this by dispatching `execute_code` requests to the main thread via a `QtCore.Signal` connected to a `QtCore.Slot` on an object owned by the main thread, with a `queue.Queue` for synchronous result passing back to the RPC thread. If you ever need to modify the addon, this pattern must be preserved.
 
-The addon imports Qt through FreeCAD's `PySide` wrapper (`from PySide import QtCore`), which resolves to the binding FreeCAD was built with: PySide2 for FreeCAD 0.x and Qt5 builds, PySide6 for FreeCAD 1.x Qt6 builds. Do not import `PySide2` or `PySide6` directly; a mismatched binding would load a second Qt into the FreeCAD process.
+The addon imports Qt through FreeCAD's `PySide` wrapper (`from PySide import QtCore`), which resolves to the binding FreeCAD was built with: PySide2 for Qt5 builds, PySide6 for Qt6 builds. Do not import `PySide2` or `PySide6` directly; a mismatched binding would load a second Qt into the FreeCAD process.
 
 ## Security considerations
 
