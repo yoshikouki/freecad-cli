@@ -206,7 +206,10 @@ def install_addon():
     elif system == "Linux":
         mod_dir = Path.home() / ".local" / "share" / "FreeCAD" / "Mod"
     elif system == "Windows":
-        mod_dir = _windows_mod_dir(Path(os.environ["APPDATA"]))
+        appdata = os.environ.get("APPDATA")
+        if not appdata:
+            error("APPDATA environment variable is not set", "invalid_input")
+        mod_dir = _windows_mod_dir(Path(appdata))
     else:
         error(f"Unsupported platform: {system}", "invalid_input")
 

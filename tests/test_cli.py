@@ -151,3 +151,17 @@ def test_windows_mod_dir_falls_back_to_unversioned(tmp_path):
     from freecad_cli.cli import _windows_mod_dir
 
     assert _windows_mod_dir(tmp_path) == tmp_path / "FreeCAD" / "Mod"
+
+
+def test_install_addon_windows_without_appdata(monkeypatch):
+    monkeypatch.delenv("APPDATA", raising=False)
+    with patch("freecad_cli.cli.platform.system", return_value="Windows"):
+        result = CliRunner().invoke(cli, ["install-addon"])
+
+    assert result.exit_code == 1
+    assert result.stdout == ""
+    assert json.loads(result.stderr) == {
+        "status": "error",
+        "error": "APPDATA environment variable is not set",
+        "code": "invalid_input",
+    }
