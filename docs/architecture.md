@@ -20,9 +20,24 @@ All business logic — document management, export, screenshot capture — lives
 
 This means:
 
-- **The addon is stable.** It changes rarely (for example, for Qt binding compatibility). `install-addon` symlinks it to this repository, so pulling an update and restarting FreeCAD is enough to pick it up.
+- **The addon is stable.** It changes rarely (for example, for Qt binding compatibility). `install-addon` links it to this repository (symlink on macOS/Linux, directory junction on Windows), so pulling an update and restarting FreeCAD is enough to pick it up.
 - **New CLI features don't require FreeCAD restarts.** The CLI is installed in editable mode, so code changes take effect immediately.
 - **Contributors should add new functionality to the CLI client, not to the addon.**
+
+## Addon installation
+
+`install-addon` installs into `<UserAppData>/Mod`. It selects the newest existing
+`vX-Y` directory under `FreeCAD` numerically, or the unversioned `FreeCAD` folder
+if none exists. Selection is shared across all platforms; only the base data
+directory differs: `~/Library/Application Support` on macOS, `$XDG_DATA_HOME`
+(default `~/.local/share`) on Linux, and `%APPDATA%` on Windows.
+
+FreeCAD itself selects the newest directory at or below its running version.
+The CLI does not know that version, so users running an older version alongside
+a newer data directory must specify the actual destination with
+`install-addon --mod-dir /path/to/FreeCAD/v1-1/Mod`. The success JSON includes the
+installed path. Filesystem `OSError` failures return the existing JSON error
+envelope with code `installation_error` on stderr and exit nonzero.
 
 ## Main thread constraint
 

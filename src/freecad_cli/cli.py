@@ -1,5 +1,6 @@
 import os
 import platform
+import re
 import sys
 from pathlib import Path
 
@@ -175,61 +176,65 @@ def insert_part(ctx, path):
     success(result)
 
 
-def _windows_mod_dir(appdata: Path) -> Path:
-    """Return FreeCAD's user Mod dir on Windows.
-
-    FreeCAD 1.1+ uses a versioned user data dir (e.g. %APPDATA%/FreeCAD/v1-1);
-    older versions use %APPDATA%/FreeCAD directly. Prefer the newest versioned dir.
-    """
-    base = appdata / "FreeCAD"
+def _select_mod_dir(base: Path, directory_names: list[str]) -> Path:
+    """Select the newest vX-Y directory, or the unversioned base, without I/O."""
     versioned = []
-    if base.is_dir():
-        for child in base.iterdir():
-            parts = child.name[1:].split("-")
-            if child.is_dir() and child.name.startswith("v") and all(p.isdigit() for p in parts):
-                versioned.append((tuple(int(p) for p in parts), child))
+    for name in directory_names:
+        match = re.fullmatch(r"v([0-9]+)-([0-9]+)", name)
+        if match:
+            versioned.append((tuple(int(p) for p in match.groups()), name))
     if versioned:
-        return max(versioned)[1] / "Mod"
+        return base / max(versioned)[1] / "Mod"
     return base / "Mod"
 
 
 @cli.command("install-addon")
-def install_addon():
+@click.option("--mod-dir", type=click.Path(path_type=Path),
+              help="Install into this Mod directory instead of selecting one automatically")
+def install_addon(mod_dir):
     """Install the RPC server addon into FreeCAD."""
     addon_src = Path(__file__).resolve().parent.parent.parent / "addon" / "FreecadCli"
     if not addon_src.is_dir():
         error(f"Addon source not found: {addon_src}", "invalid_input")
 
     system = platform.system()
-    if system == "Darwin":
-        mod_dir = Path.home() / "Library" / "Application Support" / "FreeCAD" / "Mod"
-    elif system == "Linux":
-        mod_dir = Path.home() / ".local" / "share" / "FreeCAD" / "Mod"
-    elif system == "Windows":
-        appdata = os.environ.get("APPDATA")
-        if not appdata:
-            error("APPDATA environment variable is not set", "invalid_input")
-        mod_dir = _windows_mod_dir(Path(appdata))
-    else:
+    if system not in ("Darwin", "Linux", "Windows"):
         error(f"Unsupported platform: {system}", "invalid_input")
 
-    mod_dir.mkdir(parents=True, exist_ok=True)
-    link_path = mod_dir / "FreecadCli"
+    try:
+        if mod_dir is None:
+            if system == "Darwin":
+                data_home = Path.home() / "Library" / "Application Support"
+            elif system == "Linux":
+                data_home = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share")
+            else:
+                appdata = os.environ.get("APPDATA")
+                if not appdata:
+                    error("APPDATA environment variable is not set", "invalid_input")
+                data_home = Path(appdata)
+            base = data_home / "FreeCAD"
+            directory_names = [child.name for child in base.iterdir() if child.is_dir()] if base.is_dir() else []
+            mod_dir = _select_mod_dir(base, directory_names)
 
-    if link_path.is_symlink() or link_path.is_junction() or link_path.exists():
+        mod_dir.mkdir(parents=True, exist_ok=True)
+        link_path = mod_dir / "FreecadCli"
+
         is_link = link_path.is_symlink() or link_path.is_junction()
-        if is_link and link_path.resolve() == addon_src.resolve():
-            success({"path": str(link_path), "message": "Already installed"})
-            return
-        error(f"Path already exists: {link_path}. Remove it first.", "invalid_input")
+        if is_link or link_path.exists():
+            if is_link and link_path.resolve() == addon_src.resolve():
+                success({"path": str(link_path), "message": "Already installed"})
+                return
+            error(f"Path already exists: {link_path}. Remove it first.", "invalid_input")
 
-    if system == "Windows":
-        # Symlinks need admin or Developer Mode on Windows; directory junctions do not.
-        import _winapi
+        if system == "Windows":
+            # Symlinks need admin or Developer Mode on Windows; directory junctions do not.
+            import _winapi
 
-        _winapi.CreateJunction(str(addon_src), str(link_path))
-    else:
-        os.symlink(addon_src, link_path)
+            _winapi.CreateJunction(str(addon_src), str(link_path))
+        else:
+            os.symlink(addon_src, link_path)
+    except OSError as exc:
+        error(f"Could not install addon: {exc}", "installation_error")
     success({"path": str(link_path), "source": str(addon_src)})
 
 
