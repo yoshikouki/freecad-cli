@@ -22,6 +22,13 @@ packages = ["src/freecad_cli"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
+[tool.ruff.lint.per-file-ignores]
+# FreeCAD requires these module names for addon discovery and initialization.
+"addon/FreecadCli/InitGui.py" = ["N999"]
+"addon/FreecadCli/__init__.py" = ["N999"]
+# The RPC server executes supplied Python code and returns any execution exception.
+"addon/FreecadCli/rpc_server.py" = ["S102", "BLE001"]
+
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
