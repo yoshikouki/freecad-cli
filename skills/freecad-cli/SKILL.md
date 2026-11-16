@@ -57,6 +57,11 @@ freecad-cli install-addon
 
 Expected: JSON with `"status": "ok"`. `Already installed` is normal.
 
+Check `data.path`: the installer selects `Mod` under the newest existing
+`FreeCAD/vX-Y` directory, or the unversioned `FreeCAD` folder if none exists.
+If the running FreeCAD uses an older directory, specify its actual `Mod`
+directory with `freecad-cli install-addon --mod-dir /path/to/FreeCAD/v1-1/Mod`.
+
 ### 5. Restart FreeCAD
 
 The addon initializes at FreeCAD startup. Ask the user to restart FreeCAD and confirm before proceeding.
@@ -81,7 +86,7 @@ git pull
 uv tool install -e . --force
 ```
 
-The FreeCAD addon is symlinked to the repository. File changes from `git pull` are reflected on disk immediately, but FreeCAD must be restarted to reload the addon into its Python runtime. In practice, addon changes are rare — the design keeps the addon minimal.
+The FreeCAD addon is linked to the repository (symlink on macOS/Linux, directory junction on Windows). File changes from `git pull` are reflected on disk immediately, but FreeCAD must be restarted to reload the addon into its Python runtime. In practice, addon changes are rare — the design keeps the addon minimal.
 
 ---
 
@@ -174,7 +179,7 @@ All commands return JSON:
 - Success: `{"status": "ok", "data": <value>}`
 - Failure: `{"status": "error", "error": "<message>", "code": "<error_code>"}`
 
-Error codes: `connection_refused`, `timeout`, `rpc_fault`, `invalid_input`
+Error codes: `connection_refused`, `timeout`, `rpc_fault`, `invalid_input`, `installation_error`
 
 ---
 
