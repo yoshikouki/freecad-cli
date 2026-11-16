@@ -98,7 +98,8 @@ def _run_in_fake_freecad(dirs):
     def execute_code(code):
         stdout = io.StringIO()
         with patch.dict(sys.modules, {"FreeCAD": fake_freecad}), redirect_stdout(stdout):
-            exec(code, {})
+            # Exercise RPC-generated code against the fake FreeCAD module.
+            exec(code, {})  # noqa: S102
         return {"output": stdout.getvalue(), "error": ""}
 
     return execute_code
