@@ -21,7 +21,7 @@ class FreeCADClient:
                 socket.setdefaulttimeout(old_timeout)
         except ConnectionRefusedError:
             error("FreeCAD is not running or RPC server is not started", "connection_refused")
-        except socket.timeout:
+        except TimeoutError:
             error("RPC request timed out", "timeout")
         except xmlrpc.client.Fault as e:
             error(f"RPC fault: {e.faultString}", "rpc_fault")
