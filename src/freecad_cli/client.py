@@ -119,7 +119,7 @@ if parts_dir:
     for root, dirs, files in os.walk(parts_dir):
         for f in files:
             if f.endswith(('.FCStd', '.step', '.stp', '.iges', '.igs')):
-                parts.append(os.path.relpath(os.path.join(root, f), parts_dir))
+                parts.append(os.path.join(root, f))
 print(json.dumps(parts))
 """)
         return json.loads(result["output"])
