@@ -21,6 +21,24 @@ The addon is a minimal XML-RPC server that runs inside FreeCAD. It only exposes 
 3. Restart FreeCAD
 4. Verify: `freecad-cli ping`
 
+`install-addon` selects the newest existing `vX-Y` directory under the user data
+directory's `FreeCAD` folder, or the unversioned `FreeCAD` folder if none exists,
+then installs into its `Mod` directory. The data directory is
+`~/Library/Application Support` on macOS, `$XDG_DATA_HOME` (default
+`~/.local/share`) on Linux, and `%APPDATA%` on Windows. The JSON result includes
+the installed path.
+
+The CLI does not detect the running FreeCAD version. If a newer development
+version has left a directory that your current FreeCAD does not use, select the
+actual `Mod` directory explicitly:
+
+```sh
+freecad-cli install-addon --mod-dir /path/to/FreeCAD/v1-1/Mod
+```
+
+Filesystem failures return JSON on stderr with `"status": "error"` and
+`"code": "installation_error"`, and a nonzero exit code.
+
 ## Usage
 
 ### execute-code

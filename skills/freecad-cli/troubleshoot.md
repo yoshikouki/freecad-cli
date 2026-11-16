@@ -22,17 +22,31 @@ Check in order:
 2. Did you run `freecad-cli install-addon`?
 3. Did you restart FreeCAD **after** installing the addon?
 4. Is the addon in the correct location?
-   - macOS: `~/Library/Application Support/FreeCAD/Mod/FreecadCli/`
-   - Linux: `~/.local/share/FreeCAD/Mod/FreecadCli/`
+   Check the `data.path` reported by `install-addon`. On all platforms, the installer
+   selects `Mod` under the newest existing `FreeCAD/vX-Y` directory, or under the
+   unversioned `FreeCAD` folder if none exists. The base data directory is
+   `~/Library/Application Support` on macOS, `$XDG_DATA_HOME` (default
+   `~/.local/share`) on Linux, or `%APPDATA%` on Windows. If the running FreeCAD
+   uses an older version's directory, install into its actual `Mod` directory:
+
+   ```sh
+   freecad-cli install-addon --mod-dir /path/to/FreeCAD/v1-1/Mod
+   ```
 
 ### `install-addon` shows `Path already exists`
 
-Remove existing install and retry:
+For a conflicting symlink or directory junction, remove the link at the exact
+path reported in the JSON error, then retry the same installation command
+(including `--mod-dir` if used):
+
 ```sh
-# macOS
-rm ~/Library/Application\ Support/FreeCAD/Mod/FreecadCli
-# Linux
-rm ~/.local/share/FreeCAD/Mod/FreecadCli
+# macOS/Linux: replace with the path from the error
+rm "/exact/path/from/error/FreecadCli"
+```
+
+```bat
+:: Windows Command Prompt: remove the junction, using the path from the error
+rmdir "C:\exact\path\from\error\FreecadCli"
 ```
 
 ### `uv tool install -e .` fails

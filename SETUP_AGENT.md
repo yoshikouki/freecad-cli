@@ -24,9 +24,24 @@ cd freecad-cli
 # 2. Install the CLI tool
 uv tool install -e .
 
-# 3. Install the FreeCAD addon (creates a symlink into FreeCAD's Mod directory)
+# 3. Install the addon (symlink on macOS/Linux, directory junction on Windows)
 freecad-cli install-addon
 ```
+
+The installer uses `Mod` inside the newest existing `vX-Y` directory under
+`FreeCAD`, or inside the unversioned `FreeCAD` folder if none exists. The base
+data directory is `~/Library/Application Support` on macOS, `$XDG_DATA_HOME`
+(default `~/.local/share`) on Linux, or `%APPDATA%` on Windows. Check the installed
+path in the JSON result. The CLI does not detect the running FreeCAD version;
+if a newer development version has left an unused directory, pass the `Mod`
+directory your FreeCAD actually uses:
+
+```sh
+freecad-cli install-addon --mod-dir /path/to/FreeCAD/v1-1/Mod
+```
+
+Filesystem failures return JSON on stderr with `"status": "error"` and
+`"code": "installation_error"`, and a nonzero exit code.
 
 After step 3, **restart FreeCAD**. The RPC server addon will auto-start on every launch.
 
