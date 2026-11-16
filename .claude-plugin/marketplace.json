@@ -1,5 +1,5 @@
 {
-  "name": "freecad-cli",
+  "name": "yoshikouki-freecad-cli",
   "owner": {
     "name": "yoshikouki",
     "url": "https://github.com/yoshikouki"
@@ -12,7 +12,6 @@
       "name": "freecad-cli",
       "source": "./",
       "description": "Skills for setting up and operating freecad-cli — a CLI tool that controls a running FreeCAD instance via XML-RPC.",
-      "version": "1.0.0",
       "author": {
         "name": "yoshikouki",
         "url": "https://github.com/yoshikouki/freecad-cli"

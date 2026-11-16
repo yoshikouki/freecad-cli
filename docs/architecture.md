@@ -20,7 +20,7 @@ All business logic — document management, export, screenshot capture — lives
 
 This means:
 
-- **The addon is stable.** Once installed, it should never need updating.
+- **The addon is stable.** It changes rarely (for example, for Qt binding compatibility). `install-addon` symlinks it to this repository, so pulling an update and restarting FreeCAD is enough to pick it up.
 - **New CLI features don't require FreeCAD restarts.** The CLI is installed in editable mode, so code changes take effect immediately.
 - **Contributors should add new functionality to the CLI client, not to the addon.**
 
@@ -28,7 +28,9 @@ This means:
 
 FreeCAD's GUI operations (creating documents, modifying objects, taking screenshots) must run on the Qt main thread. The RPC server runs in a daemon thread, so calling GUI operations directly from RPC handlers will crash FreeCAD.
 
-The addon solves this by dispatching `execute_code` requests to the main thread via a `PySide2.QtCore.Signal`, with a `queue.Queue` for synchronous result passing back to the RPC thread. If you ever need to modify the addon, this pattern must be preserved.
+The addon solves this by dispatching `execute_code` requests to the main thread via a `QtCore.Signal` connected to a `QtCore.Slot` on an object owned by the main thread, with a `queue.Queue` for synchronous result passing back to the RPC thread. If you ever need to modify the addon, this pattern must be preserved.
+
+The addon imports Qt through FreeCAD's `PySide` wrapper (`from PySide import QtCore`), which resolves to the binding FreeCAD was built with: PySide2 for Qt5 builds, PySide6 for Qt6 builds. Do not import `PySide2` or `PySide6` directly; a mismatched binding would load a second Qt into the FreeCAD process.
 
 ## Security considerations
 

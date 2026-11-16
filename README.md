@@ -10,7 +10,7 @@ flowchart TD
     B -->|XML-RPC<br/>localhost:9875| C[FreeCAD + Addon<br/>thin eval proxy]
 ```
 
-The addon is a minimal XML-RPC server that runs inside FreeCAD. It only exposes `ping` and `execute_code` — all business logic lives in the CLI client. Once installed, the addon never needs to be updated. See [docs/architecture.md](docs/architecture.md) for design rationale and [docs/product-direction.md](docs/product-direction.md) for the command philosophy.
+The addon is a minimal XML-RPC server that runs inside FreeCAD. It only exposes `ping` and `execute_code` — all business logic lives in the CLI client, so new CLI features never require changing the addon. See [docs/architecture.md](docs/architecture.md) for design rationale and [docs/product-direction.md](docs/product-direction.md) for the command philosophy.
 
 > **Security note:** `execute-code` runs arbitrary Python inside the FreeCAD process. The RPC server binds to `127.0.0.1` only — it is not accessible over the network. Only connect to a FreeCAD instance you control.
 
@@ -66,7 +66,7 @@ All commands return JSON output:
 
 ## Agent Skills
 
-This repository ships one canonical `freecad-cli` skill under `.claude-plugin/skills/freecad-cli/`.
+This repository ships one canonical `freecad-cli` skill under `skills/freecad-cli/` and the `freecad-operator` agent under `agents/`.
 The Codex plugin manifest at `.codex-plugin/plugin.json` points at the same skill directory, so Claude Code and Codex-style agent runtimes can share the same operating guidance.
 
 ### Codex / OpenAI Agent Skills
