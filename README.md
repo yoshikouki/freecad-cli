@@ -66,7 +66,7 @@ All commands return JSON output:
 
 ## Agent Skills
 
-This repository ships one canonical `freecad-cli` skill under `.claude-plugin/skills/freecad-cli/`.
+This repository ships one canonical `freecad-cli` skill under `skills/freecad-cli/` and the `freecad-operator` agent under `agents/`.
 The Codex plugin manifest at `.codex-plugin/plugin.json` points at the same skill directory, so Claude Code and Codex-style agent runtimes can share the same operating guidance.
 
 ### Codex / OpenAI Agent Skills

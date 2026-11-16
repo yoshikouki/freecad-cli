@@ -16,7 +16,7 @@
     "rpc",
     "ai-agent"
   ],
-  "skills": "./.claude-plugin/skills/",
+  "skills": "./skills/",
   "interface": {
     "displayName": "freecad-cli",
     "shortDescription": "Control FreeCAD from agent workflows.",
